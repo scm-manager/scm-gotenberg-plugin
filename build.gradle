@@ -38,8 +38,8 @@ scmPlugin {
   displayName = "Gotenberg Plugin"
   description = "Display office documents in the source code viewer of SCM-Manager"
 
-  // author = "Your name"
-  // category = "Workflow"
+  author = "Cloudogu GmbH"
+  category = "Documentation"
 
   openapi {
     packages = [
