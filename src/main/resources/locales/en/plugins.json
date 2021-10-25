@@ -2,6 +2,15 @@
   "scm-gotenberg-plugin": {
     "pdfViewer": {
       "notSupported": "Failed to display the document. Please download it from <1>here</1>."
+    },
+    "config": {
+      "title": "Gotenberg configuration",
+      "link": "Gotenberg",
+      "url": "URL",
+      "urlHelpText": "URL to the gotenberg server e.g. http://localhost:3000",
+      "invalid": "Please enter a valid url e.g.: http://localhost:3000",
+      "enabled": "Enabled",
+      "enabledHelpText": "Enable document conversion with gotenberg"
     }
   },
   "permissions": {

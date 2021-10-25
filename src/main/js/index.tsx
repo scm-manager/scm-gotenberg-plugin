@@ -23,8 +23,10 @@
  */
 
 import { binder } from "@scm-manager/ui-extensions";
+import { ConfigurationBinder as cfgBinder } from "@scm-manager/ui-components";
 import ConvertedPdfViewer from "./ConvertedPdfViewer";
 import { File } from "@scm-manager/ui-types";
+import GotenbergConfiguration from "./GotenbergConfiguration";
 
 type FileProps = {
   file?: File;
@@ -35,3 +37,10 @@ const pdfLinkPredicate = (props: FileProps) => {
 };
 
 binder.bind("repos.sources.view", ConvertedPdfViewer, pdfLinkPredicate);
+
+cfgBinder.bindGlobal(
+  "/gotenberg",
+  "scm-gotenberg-plugin.config.link",
+  "gotenbergConfig",
+  GotenbergConfiguration
+);
