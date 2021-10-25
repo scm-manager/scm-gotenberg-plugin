@@ -1,5 +1,7 @@
 {
   "scm-gotenberg-plugin": {
-
+    "pdfViewer": {
+      "notSupported": "Das Dokument konnte nicht angezeigt werden. Es kann <1>hier</1> heruntergeladen werden."
+    }
   }
 }

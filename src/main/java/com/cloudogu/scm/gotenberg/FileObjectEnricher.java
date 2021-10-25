@@ -41,12 +41,12 @@ import javax.inject.Provider;
 public class FileObjectEnricher implements HalEnricher {
 
   private final PdfService service;
-  private final RestApiLinks api;
+  private final Provider<ScmPathInfoStore> pathInfoStore;
 
   @Inject
   public FileObjectEnricher(PdfService service, Provider<ScmPathInfoStore> pathInfoStore) {
     this.service = service;
-    this.api = new RestApiLinks(pathInfoStore.get().get().getApiRestUri());
+    this.pathInfoStore = pathInfoStore;
   }
 
   @Override
@@ -57,11 +57,15 @@ public class FileObjectEnricher implements HalEnricher {
       BrowserResult browserResult = context.oneRequireByType(BrowserResult.class);
 
 
-      String href = api.gotenberg().convertToPdf(
+      String href = apiLinks().gotenberg().convertToPdf(
         repository.getNamespace(), repository.getName(), browserResult.getRevision(), file.getPath()
       ).asString();
 
       appender.appendLink("pdf", href);
     }
+  }
+
+  private RestApiLinks apiLinks() {
+    return new RestApiLinks(pathInfoStore.get().get().getApiRestUri());
   }
 }
