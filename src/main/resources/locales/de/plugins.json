@@ -3,5 +3,15 @@
     "pdfViewer": {
       "notSupported": "Das Dokument konnte nicht angezeigt werden. Es kann <1>hier</1> heruntergeladen werden."
     }
+  },
+  "permissions": {
+    "configuration": {
+      "read,write": {
+        "gotenberg": {
+          "displayName": "Gotenberg Konfiguration ändern",
+          "description": "Darf die Gotenberg Konfiguration verändern"
+        }
+      }
+    }
   }
 }

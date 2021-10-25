@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
 import sonia.scm.io.ContentTypeResolver;
 import sonia.scm.net.ahc.AdvancedHttpClient;
+import sonia.scm.util.HttpUtil;
 
 import javax.inject.Inject;
 import java.io.ByteArrayOutputStream;
@@ -49,18 +50,19 @@ public class Converter {
     "pxl", "sdc", "slk", "stc", "sxc", "uos", "xls", "xlt", "xlsx", "tif", "jpeg", "odp"
   );
 
-
+  private final GotenbergConfigurationStore configurationStore;
   private final AdvancedHttpClient client;
   private final ContentTypeResolver contentTypeResolver;
   private final Supplier<String> boundaryGenerator;
 
   @Inject
-  public Converter(AdvancedHttpClient client, ContentTypeResolver contentTypeResolver) {
-    this(client, contentTypeResolver, () -> "------------------------" + System.currentTimeMillis() );
+  public Converter(GotenbergConfigurationStore configurationStore, AdvancedHttpClient client, ContentTypeResolver contentTypeResolver) {
+    this(configurationStore, client, contentTypeResolver, () -> "------------------------" + System.currentTimeMillis() );
   }
 
   @VisibleForTesting
-  Converter(AdvancedHttpClient client, ContentTypeResolver contentTypeResolver, Supplier<String> boundaryGenerator) {
+  Converter(GotenbergConfigurationStore configurationStore, AdvancedHttpClient client, ContentTypeResolver contentTypeResolver, Supplier<String> boundaryGenerator) {
+    this.configurationStore = configurationStore;
     this.client = client;
     this.contentTypeResolver = contentTypeResolver;
     this.boundaryGenerator = boundaryGenerator;
@@ -73,11 +75,15 @@ public class Converter {
   public InputStream convert(InputStream content, RepositoryPath path) throws IOException {
     String boundary = boundaryGenerator.get();
 
-    return client.post("http://localhost:3000/forms/libreoffice/convert")
+    return client.post(createConvertUrl())
       .contentType("multipart/form-data; boundary=" + boundary)
       .rawContent(createContent(content, path, boundary))
       .request()
       .contentAsStream();
+  }
+
+  private String createConvertUrl() {
+    return HttpUtil.append(configurationStore.get().getUrl(), "/forms/libreoffice/convert");
   }
 
   private byte[] createContent(InputStream content, RepositoryPath path, String boundary) throws IOException {

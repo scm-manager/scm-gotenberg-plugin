@@ -3,5 +3,15 @@
     "pdfViewer": {
       "notSupported": "Failed to display the document. Please download it from <1>here</1>."
     }
+  },
+  "permissions": {
+    "configuration": {
+      "read,write": {
+        "gotenberg": {
+          "displayName": "Modify Gotenberg configuration",
+          "description": "May modify the Gotenberg configuration"
+        }
+      }
+    }
   }
 }

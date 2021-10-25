@@ -54,6 +54,9 @@ class FileObjectEnricherTest {
   @Mock
   private HalAppender appender;
 
+  @Mock
+  private GotenbergConfigurationStore configurationStore;
+
   private FileObjectEnricher enricher;
 
   @BeforeEach
@@ -61,14 +64,19 @@ class FileObjectEnricherTest {
     ScmPathInfoStore store = new ScmPathInfoStore();
     store.set(() -> URI.create("/"));
 
-    enricher = new FileObjectEnricher(pdfService, Providers.of(store));
+    enricher = new FileObjectEnricher(configurationStore, pdfService, Providers.of(store));
   }
 
   @Test
   void shouldAppendPdfLink() {
+
     FileObject file = new FileObject();
     file.setPath("h2g2.pdf");
 
+    GotenbergConfiguration configuration = new GotenbergConfiguration();
+    configuration.setEnabled(true);
+
+    when(configurationStore.get()).thenReturn(configuration);
     when(pdfService.isSupported(file)).thenReturn(true);
     when(context.oneRequireByType(FileObject.class)).thenReturn(file);
     NamespaceAndName namespaceAndName = new NamespaceAndName("hitchhiker", "guide");
@@ -86,7 +94,27 @@ class FileObjectEnricherTest {
     FileObject file = new FileObject();
     file.setPath("h2g2.mp4");
 
+    GotenbergConfiguration configuration = new GotenbergConfiguration();
+    configuration.setEnabled(true);
+
+    when(configurationStore.get()).thenReturn(configuration);
     when(pdfService.isSupported(file)).thenReturn(false);
+    when(context.oneRequireByType(FileObject.class)).thenReturn(file);
+
+    enricher.enrich(context, appender);
+
+    verifyNoInteractions(appender);
+  }
+
+  @Test
+  void shouldNotAppendPdfLinkIfGotenbergIsDisabled() {
+    FileObject file = new FileObject();
+    file.setPath("h2g2.mp4");
+
+    GotenbergConfiguration configuration = new GotenbergConfiguration();
+    configuration.setEnabled(false);
+
+    when(configurationStore.get()).thenReturn(configuration);
     when(context.oneRequireByType(FileObject.class)).thenReturn(file);
 
     enricher.enrich(context, appender);

@@ -21,53 +21,41 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 package com.cloudogu.scm.gotenberg;
 
 import sonia.scm.api.v2.resources.Enrich;
 import sonia.scm.api.v2.resources.HalAppender;
 import sonia.scm.api.v2.resources.HalEnricher;
 import sonia.scm.api.v2.resources.HalEnricherContext;
+import sonia.scm.api.v2.resources.Index;
 import sonia.scm.api.v2.resources.ScmPathInfoStore;
 import sonia.scm.plugin.Extension;
-import sonia.scm.repository.BrowserResult;
-import sonia.scm.repository.FileObject;
-import sonia.scm.repository.NamespaceAndName;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 
 @Extension
-@Enrich(FileObject.class)
-public class FileObjectEnricher implements HalEnricher {
+@Enrich(Index.class)
+public class IndexLinkEnricher implements HalEnricher {
 
-  private final GotenbergConfigurationStore configurationStore;
-  private final PdfService service;
   private final Provider<ScmPathInfoStore> pathInfoStore;
 
   @Inject
-  public FileObjectEnricher(GotenbergConfigurationStore configurationStore, PdfService service, Provider<ScmPathInfoStore> pathInfoStore) {
-    this.configurationStore = configurationStore;
-    this.service = service;
+  public IndexLinkEnricher(Provider<ScmPathInfoStore> pathInfoStore) {
     this.pathInfoStore = pathInfoStore;
   }
 
   @Override
   public void enrich(HalEnricherContext context, HalAppender appender) {
-    FileObject file = context.oneRequireByType(FileObject.class);
-    if (configurationStore.get().isEnabled() && service.isSupported(file)) {
-      NamespaceAndName repository = context.oneRequireByType(NamespaceAndName.class);
-      BrowserResult browserResult = context.oneRequireByType(BrowserResult.class);
-
-
-      String href = apiLinks().gotenberg().convertToPdf(
-        repository.getNamespace(), repository.getName(), browserResult.getRevision(), file.getPath()
-      ).asString();
-
-      appender.appendLink("pdf", href);
+    if (Permissions.read().isPermitted()) {
+      appendConfigLink(appender);
     }
   }
 
-  private RestApiLinks apiLinks() {
-    return new RestApiLinks(pathInfoStore.get().get().getApiRestUri());
+  private void appendConfigLink(HalAppender appender) {
+    RestApiLinks links = new RestApiLinks(pathInfoStore.get().get().getApiRestUri());
+    String configLink = links.gotenberg().getConfig().asString();
+    appender.appendLink("gotenbergConfig", configLink);
   }
 }

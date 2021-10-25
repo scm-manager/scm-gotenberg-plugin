@@ -53,6 +53,9 @@ import static org.mockito.Mockito.when;
 class ConverterTest {
 
   @Mock
+  private GotenbergConfigurationStore configurationStore;
+
+  @Mock
   private AdvancedHttpClient client;
 
   @Mock
@@ -65,7 +68,7 @@ class ConverterTest {
 
     @BeforeEach
     void setUpObjectUnderTest() {
-      converter = new Converter(client, contentTypeResolver);
+      converter = new Converter(configurationStore, client, contentTypeResolver);
     }
 
     @ParameterizedTest
@@ -93,18 +96,22 @@ class ConverterTest {
 
     @BeforeEach
     void setUpObjectUnderTest() {
-      converter = new Converter(client, contentTypeResolver, () -> "+++");
+      converter = new Converter(configurationStore, client, contentTypeResolver, () -> "+++");
     }
 
     @Test
     void shouldSendConvertRequest() throws IOException {
+      GotenbergConfiguration configuration = new GotenbergConfiguration();
+      configuration.setUrl("https://gotenberg.dev");
+      when(configurationStore.get()).thenReturn(configuration);
+
       InputStream content = new ByteArrayInputStream("Don't Panic".getBytes(StandardCharsets.UTF_8));
       RepositoryPath path = new RepositoryPath(
         "hitchhiker", "h2g2", "42", "a/b/c/h2g2.pdf"
       );
 
       when(contentTypeResolver.resolve("a/b/c/h2g2.pdf")).thenReturn(new PDF());
-      when(client.post("http://localhost:3000/forms/libreoffice/convert")).thenReturn(request);
+      when(client.post("https://gotenberg.dev/forms/libreoffice/convert")).thenReturn(request);
       when(request.request()).thenReturn(response);
 
       converter.convert(content, path);
