@@ -142,7 +142,7 @@ class PdfServiceTest {
       when(converter.isConvertable(ext)).thenReturn(true);
       when(repositoryManager.get(path.getNamespaceAndName())).thenReturn(repository);
       when(fileResolver.getContent(repository, path)).thenReturn(pptx);
-      when(converter.convert(pptx, path)).thenReturn(pdf);
+      when(converter.convert(path, pptx)).thenReturn(pdf);
     }
 
     @Test

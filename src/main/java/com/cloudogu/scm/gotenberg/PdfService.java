@@ -24,8 +24,6 @@
 package com.cloudogu.scm.gotenberg;
 
 import com.google.common.io.ByteStreams;
-import sonia.scm.ContextEntry;
-import sonia.scm.NotFoundException;
 import sonia.scm.repository.FileObject;
 import sonia.scm.repository.Repository;
 import sonia.scm.repository.RepositoryManager;
@@ -100,7 +98,7 @@ class PdfService {
   }
 
   private InputStream convertAndCache(BlobStore cache, Repository repository, RepositoryPath path) throws IOException {
-    InputStream convert = converter.convert(fileResolver.getContent(repository, path), path);
+    InputStream convert = converter.convert(path, fileResolver.getContent(repository, path));
     Blob blob = cache(cache, path, convert);
     return blob.getInputStream();
   }

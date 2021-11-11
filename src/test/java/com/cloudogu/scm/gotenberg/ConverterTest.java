@@ -21,29 +21,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 package com.cloudogu.scm.gotenberg;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Answers;
-import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import sonia.scm.io.ContentType;
-import sonia.scm.io.ContentTypeResolver;
 import sonia.scm.net.ahc.AdvancedHttpClient;
 import sonia.scm.net.ahc.AdvancedHttpRequestWithBody;
 import sonia.scm.net.ahc.AdvancedHttpResponse;
+import sonia.scm.net.ahc.FormContentBuilder;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
@@ -58,18 +56,12 @@ class ConverterTest {
   @Mock
   private AdvancedHttpClient client;
 
-  @Mock
-  private ContentTypeResolver contentTypeResolver;
-
+  @InjectMocks
   private Converter converter;
+
 
   @Nested
   class IsConvertableTests {
-
-    @BeforeEach
-    void setUpObjectUnderTest() {
-      converter = new Converter(configurationStore, client, contentTypeResolver);
-    }
 
     @ParameterizedTest
     @ValueSource(strings = {"docx", "doc", "odt", "ppt", "pptx"})
@@ -94,10 +86,8 @@ class ConverterTest {
     @Mock
     private AdvancedHttpResponse response;
 
-    @BeforeEach
-    void setUpObjectUnderTest() {
-      converter = new Converter(configurationStore, client, contentTypeResolver, () -> "+++");
-    }
+    @Mock(answer = Answers.RETURNS_SELF)
+    private FormContentBuilder formContentBuilder;
 
     @Test
     void shouldSendConvertRequest() throws IOException {
@@ -110,59 +100,16 @@ class ConverterTest {
         "hitchhiker", "h2g2", "42", "a/b/c/h2g2.pdf"
       );
 
-      when(contentTypeResolver.resolve("a/b/c/h2g2.pdf")).thenReturn(new PDF());
       when(client.post("https://gotenberg.dev/forms/libreoffice/convert")).thenReturn(request);
+      when(request.formContent()).thenReturn(formContentBuilder);
+      when(formContentBuilder.build()).thenReturn(request);
       when(request.request()).thenReturn(response);
 
-      converter.convert(content, path);
+      converter.convert(path, content);
 
-      ArgumentCaptor<byte[]> captor = ArgumentCaptor.forClass(byte[].class);
-      verify(request).contentType("multipart/form-data; boundary=+++");
-      verify(request).rawContent(captor.capture());
-
-      String expected = String.join(System.getProperty("line.separator"),
-        "--+++",
-        "Content-Disposition: form-data; name=\"files\"; filename=\"h2g2.pdf\"",
-        "Content-Type: application/pdf",
-        "Content-Transfer-Encoding: binary",
-        "",
-        "Don't Panic",
-        "--+++--",
-        ""
-      );
-
-      String captured = new String(captor.getValue(), StandardCharsets.UTF_8);
-      assertThat(captured).isEqualTo(expected);
+      verify(formContentBuilder).file("files", "h2g2.pdf", content);
+      verify(request).request();
     }
 
   }
-
-  private static class PDF implements ContentType {
-
-    @Override
-    public String getPrimary() {
-      return "application";
-    }
-
-    @Override
-    public String getSecondary() {
-      return "pdf";
-    }
-
-    @Override
-    public String getRaw() {
-      return "application/pdf";
-    }
-
-    @Override
-    public boolean isText() {
-      return false;
-    }
-
-    @Override
-    public Optional<String> getLanguage() {
-      return Optional.empty();
-    }
-  }
-
 }

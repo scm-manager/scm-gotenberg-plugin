@@ -21,26 +21,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 package com.cloudogu.scm.gotenberg;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.ByteStreams;
 import sonia.scm.io.ContentTypeResolver;
 import sonia.scm.net.ahc.AdvancedHttpClient;
 import sonia.scm.util.HttpUtil;
 
 import javax.inject.Inject;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.Set;
 import java.util.function.Supplier;
 
-public class Converter {
+public final class Converter {
 
   private static final Set<String> CONVERTABLE = ImmutableSet.of(
     "bib", "doc", "xml", "docx", "fodt", "html", "ltx", "txt", "odt", "ott", "pdb", "pdf", "psw", "rtf", "sdw", "stw",
@@ -52,32 +48,28 @@ public class Converter {
 
   private final GotenbergConfigurationStore configurationStore;
   private final AdvancedHttpClient client;
-  private final ContentTypeResolver contentTypeResolver;
-  private final Supplier<String> boundaryGenerator;
 
   @Inject
-  public Converter(GotenbergConfigurationStore configurationStore, AdvancedHttpClient client, ContentTypeResolver contentTypeResolver) {
-    this(configurationStore, client, contentTypeResolver, () -> "------------------------" + System.currentTimeMillis() );
+  public Converter(GotenbergConfigurationStore configurationStore, AdvancedHttpClient client) {
+    this.configurationStore = configurationStore;
+    this.client = client;
   }
 
   @VisibleForTesting
   Converter(GotenbergConfigurationStore configurationStore, AdvancedHttpClient client, ContentTypeResolver contentTypeResolver, Supplier<String> boundaryGenerator) {
     this.configurationStore = configurationStore;
     this.client = client;
-    this.contentTypeResolver = contentTypeResolver;
-    this.boundaryGenerator = boundaryGenerator;
   }
 
   public boolean isConvertable(String extension) {
     return CONVERTABLE.contains(extension);
   }
 
-  public InputStream convert(InputStream content, RepositoryPath path) throws IOException {
-    String boundary = boundaryGenerator.get();
-
+  public InputStream convert(RepositoryPath path, InputStream content) throws IOException {
     return client.post(createConvertUrl())
-      .contentType("multipart/form-data; boundary=" + boundary)
-      .rawContent(createContent(content, path, boundary))
+      .formContent()
+      .file("files", path.getFilename(), content)
+      .build()
       .request()
       .contentAsStream();
   }
@@ -85,26 +77,4 @@ public class Converter {
   private String createConvertUrl() {
     return HttpUtil.append(configurationStore.get().getUrl(), "/forms/libreoffice/convert");
   }
-
-  private byte[] createContent(InputStream content, RepositoryPath path, String boundary) throws IOException {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(baos, StandardCharsets.UTF_8), true)) {
-      writer.append("--").println(boundary);
-      writer.append("Content-Disposition: form-data; name=\"files\"; filename=\"").append(path.getFilename()).println("\"");
-      writer.append("Content-Type: ").println(contentTypeResolver.resolve(path.getPath()).getRaw());
-      writer.println("Content-Transfer-Encoding: binary");
-      writer.println();
-
-      writer.flush();
-
-      ByteStreams.copy(content, baos);
-
-      writer.println();
-      writer.append("--").append(boundary).println("--");
-      writer.flush();
-    }
-
-    return baos.toByteArray();
-  }
-
 }
