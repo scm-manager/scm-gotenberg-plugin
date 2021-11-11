@@ -64,7 +64,7 @@ class PdfServiceTest {
   void setUpObjectUnderTest() {
     pdfService = new PdfService(
       repositoryManager,
-      new InMemoryBlobStoreFactory(),
+      new CacheFactory(new InMemoryBlobStoreFactory()),
       fileResolver,
       converter
     );

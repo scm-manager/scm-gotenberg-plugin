@@ -23,21 +23,14 @@
  */
 package com.cloudogu.scm.gotenberg;
 
-import com.google.common.io.ByteStreams;
-import sonia.scm.ContextEntry;
-import sonia.scm.NotFoundException;
 import sonia.scm.repository.FileObject;
 import sonia.scm.repository.Repository;
 import sonia.scm.repository.RepositoryManager;
-import sonia.scm.store.Blob;
-import sonia.scm.store.BlobStore;
-import sonia.scm.store.BlobStoreFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Optional;
 
 import static sonia.scm.ContextEntry.ContextBuilder.entity;
@@ -46,20 +39,18 @@ import static sonia.scm.NotFoundException.notFound;
 @Singleton
 class PdfService {
 
-  private static final String STORE = "gotenberg";
-
   private final RepositoryManager repositoryManager;
-  private final BlobStoreFactory blobStoreFactory;
+  private final CacheFactory cacheFactory;
   private final FileResolver fileResolver;
   private final Converter converter;
 
   @Inject
   public PdfService(RepositoryManager repositoryManager,
-                    BlobStoreFactory blobStoreFactory,
+                    CacheFactory cacheFactory,
                     FileResolver fileResolver,
                     Converter converter) {
     this.repositoryManager = repositoryManager;
-    this.blobStoreFactory = blobStoreFactory;
+    this.cacheFactory = cacheFactory;
     this.fileResolver = fileResolver;
     this.converter = converter;
   }
@@ -70,7 +61,7 @@ class PdfService {
       .orElse(false);
   }
 
-  public synchronized InputStream getOrConvertPdf(RepositoryPath path) throws IOException {
+  public InputStream getOrConvertPdf(RepositoryPath path) throws IOException {
     checkIfPathIsSupported(path);
 
     Repository repository = repositoryManager.get(path.getNamespaceAndName());
@@ -78,18 +69,14 @@ class PdfService {
       throw notFound(entity(path.getNamespaceAndName()));
     }
 
-    BlobStore cache = store(repository);
+    CacheFactory.Cache cache = cacheFactory.get(repository);
 
-    Optional<Blob> optional = cache.getOptional(path.getCacheKey());
+    Optional<InputStream> optional = cache.get(path);
     if (optional.isPresent()) {
-      return optional.get().getInputStream();
+      return optional.get();
     } else {
       return convertAndCache(cache, repository, path);
     }
-  }
-
-  private BlobStore store(Repository repository) {
-    return blobStoreFactory.withName(STORE).forRepository(repository).build();
   }
 
   private void checkIfPathIsSupported(RepositoryPath path) {
@@ -99,19 +86,11 @@ class PdfService {
      }
   }
 
-  private InputStream convertAndCache(BlobStore cache, Repository repository, RepositoryPath path) throws IOException {
-    InputStream convert = converter.convert(fileResolver.getContent(repository, path), path);
-    Blob blob = cache(cache, path, convert);
-    return blob.getInputStream();
-  }
-
-  private Blob cache(BlobStore cache, RepositoryPath path, InputStream content) throws IOException {
-    Blob blob = cache.create(path.getCacheKey());
-    try (OutputStream output = blob.getOutputStream()) {
-      ByteStreams.copy(content, output);
-      blob.commit();
+  private InputStream convertAndCache(CacheFactory.Cache cache, Repository repository, RepositoryPath path) throws IOException {
+    try (InputStream convert = converter.convert(fileResolver.getContent(repository, path), path)) {
+      cache.set(path, convert);
     }
-    return blob;
+    return cache.get(path).orElseThrow(() -> new IllegalStateException("currently cached object is not available"));
   }
 
 }
