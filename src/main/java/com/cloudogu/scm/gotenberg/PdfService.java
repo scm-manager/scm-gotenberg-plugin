@@ -87,7 +87,7 @@ class PdfService {
   }
 
   private InputStream convertAndCache(CacheFactory.Cache cache, Repository repository, RepositoryPath path) throws IOException {
-    try (InputStream convert = converter.convert(fileResolver.getContent(repository, path), path)) {
+    try (InputStream convert = converter.convert(path, fileResolver.getContent(repository, path))) {
       cache.set(path, convert);
     }
     return cache.get(path).orElseThrow(() -> new IllegalStateException("currently cached object is not available"));
