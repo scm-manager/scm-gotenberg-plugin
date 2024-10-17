@@ -16,6 +16,7 @@
 
 package com.cloudogu.scm.gotenberg;
 
+import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,6 +37,8 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -88,19 +91,44 @@ class ConverterTest {
       when(configurationStore.get()).thenReturn(configuration);
 
       InputStream content = new ByteArrayInputStream("Don't Panic".getBytes(StandardCharsets.UTF_8));
-      RepositoryPath path = new RepositoryPath(
-        "hitchhiker", "h2g2", "42", "a/b/c/h2g2.pdf"
-      );
+      RepositoryPath path = new RepositoryPath("hitchhiker", "h2g2", "42", "a/b/c/h2g2.pdf");
 
       when(client.post("https://gotenberg.dev/forms/libreoffice/convert")).thenReturn(request);
       when(request.formContent()).thenReturn(formContentBuilder);
       when(formContentBuilder.build()).thenReturn(request);
       when(request.request()).thenReturn(response);
 
+      when(response.isSuccessful()).thenReturn(true);
+
       converter.convert(path, content);
 
       verify(formContentBuilder).file("files", "h2g2.pdf", content);
       verify(request).request();
+      verify(response).contentAsStream();
+    }
+
+    @Test
+    void shouldThrowGotenbergServerException() throws IOException {
+      GotenbergConfiguration configuration = new GotenbergConfiguration();
+      configuration.setUrl("https://gotenberg.dev");
+      when(configurationStore.get()).thenReturn(configuration);
+
+      InputStream content = new ByteArrayInputStream("Don't Panic".getBytes(StandardCharsets.UTF_8));
+      RepositoryPath path = new RepositoryPath("hitchhiker", "h2g2", "42", "a/b/c/h2g2.pdf");
+
+      when(client.post("https://gotenberg.dev/forms/libreoffice/convert")).thenReturn(request);
+      when(request.formContent()).thenReturn(formContentBuilder);
+      when(formContentBuilder.build()).thenReturn(request);
+      when(request.request()).thenReturn(response);
+
+      when(response.getStatus()).thenReturn(Response.Status.BAD_GATEWAY.getStatusCode());
+      when(response.isSuccessful()).thenReturn(false);
+
+      Exception exception = assertThrows(GotenbergServerException.class, () -> converter.convert(path, content));
+
+      String expectedMessage = "Unexpected response by Gotenberg server: 502";
+      assertEquals(expectedMessage, exception.getMessage());
+
     }
 
   }

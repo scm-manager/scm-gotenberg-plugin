@@ -27,9 +27,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import sonia.scm.api.v2.resources.ErrorDto;
-import sonia.scm.web.VndMediaType;
-
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
@@ -42,6 +39,9 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.StreamingOutput;
 import jakarta.ws.rs.core.UriInfo;
+import sonia.scm.api.v2.resources.ErrorDto;
+import sonia.scm.web.VndMediaType;
+
 import java.io.InputStream;
 
 @Path("v2/gotenberg")
@@ -165,6 +165,10 @@ public class GotenbergResource {
       mediaType = VndMediaType.ERROR_TYPE,
       schema = @Schema(implementation = ErrorDto.class)
     )
+  )
+  @ApiResponse(
+    responseCode = "502",
+    description = "Unexpected Gotenberg server error"
   )
   public StreamingOutput convertToPdf(@PathParam("namespace") String namespace,
                                       @PathParam("name") String name,

@@ -1,7 +1,7 @@
 {
   "scm-gotenberg-plugin": {
     "pdfViewer": {
-      "notSupported": "Failed to display the document. Please download it from <1>here</1>."
+      "notSupported": "Failed to display the document. It may be, that it is too big or too complex. Please download it from <1>here</1>."
     },
     "config": {
       "title": "Gotenberg configuration",
