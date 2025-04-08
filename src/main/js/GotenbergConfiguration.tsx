@@ -15,11 +15,12 @@
  */
 
 import React, { FC, useEffect } from "react";
-import { useConfigLink } from "@scm-manager/ui-api";
-import { HalRepresentation } from "@scm-manager/ui-types";
 import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
+import { useConfigLink } from "@scm-manager/ui-api";
 import { Checkbox, ConfigurationForm, InputField, Title, validation } from "@scm-manager/ui-components";
+import { useDocumentTitle } from "@scm-manager/ui-core";
+import { HalRepresentation } from "@scm-manager/ui-types";
 
 type Props = {
   link: string;
@@ -32,13 +33,13 @@ type Configuration = HalRepresentation & {
 
 const GotenbergConfiguration: FC<Props> = ({ link }) => {
   const [t] = useTranslation("plugins");
+  useDocumentTitle(t("scm-gotenberg-plugin.config.title"));
   const { initialConfiguration, isReadOnly, update, ...formProps } = useConfigLink<Configuration>(link);
   const { formState, handleSubmit, register, reset } = useForm<Configuration>({ mode: "onChange" });
   const {errors} = formState;
 
   useEffect(() => {
     if (initialConfiguration) {
-      // TODO check why the type error
       reset(initialConfiguration);
     }
   }, [initialConfiguration]);
