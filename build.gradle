@@ -25,7 +25,7 @@ dependencies {
 }
 
 scmPlugin {
-  scmVersion = "3.8.1-SNAPSHOT"
+  scmVersion = "3.9.0"
   displayName = "Gotenberg Plugin"
   description = "Display office documents in the source code viewer of SCM-Manager"
 
