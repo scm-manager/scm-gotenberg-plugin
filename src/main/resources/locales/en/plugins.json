@@ -1,16 +1,16 @@
 {
   "scm-gotenberg-plugin": {
     "pdfViewer": {
-      "notSupported": "Failed to display the document. It may be, that it is too big or too complex. Please download it from <1>here</1>."
+      "notSupported": "Failed to display the document. The file may be too big or structurally complex. If the document is needed, it can be downloaded <1>here</1> and displayed externally."
     },
     "config": {
       "title": "Gotenberg configuration",
       "link": "Gotenberg",
       "url": "URL",
-      "urlHelpText": "URL to the gotenberg server e.g. http://localhost:3000",
-      "invalid": "Please enter a valid url e.g.: http://localhost:3000",
+      "urlHelpText": "URL to the Gotenberg server, e.g. http://localhost:3000.",
+      "invalid": "Please enter a valid URL, e.g.: http://localhost:3000.",
       "enabled": "Enabled",
-      "enabledHelpText": "Enable document conversion with gotenberg"
+      "enabledHelpText": "Enable document conversion with Gotenberg."
     }
   },
   "permissions": {
@@ -18,7 +18,7 @@
       "read,write": {
         "gotenberg": {
           "displayName": "Modify Gotenberg configuration",
-          "description": "May modify the Gotenberg configuration"
+          "description": "May modify the Gotenberg configuration."
         }
       }
     }
