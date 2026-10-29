@@ -30,9 +30,4 @@ const pdfLinkPredicate = (props: FileProps) => {
 
 binder.bind("repos.sources.view", ConvertedPdfViewer, pdfLinkPredicate);
 
-cfgBinder.bindGlobal(
-  "/gotenberg",
-  "scm-gotenberg-plugin.config.link",
-  "gotenbergConfig",
-  GotenbergConfiguration
-);
+cfgBinder.bindAdminSetting("/gotenberg", "scm-gotenberg-plugin.config.link", "gotenbergConfig", GotenbergConfiguration);

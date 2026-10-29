@@ -18,7 +18,8 @@ import React, { FC, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { useConfigLink } from "@scm-manager/ui-api";
-import { Checkbox, ConfigurationForm, InputField, Title, validation } from "@scm-manager/ui-components";
+import { Checkbox, ConfigurationForm, InputField, validation } from "@scm-manager/ui-components";
+import { Title } from "@scm-manager/ui-core";
 import { HalRepresentation } from "@scm-manager/ui-types";
 
 type Props = {
@@ -34,7 +35,7 @@ const GotenbergConfiguration: FC<Props> = ({ link }) => {
   const [t] = useTranslation("plugins");
   const { initialConfiguration, isReadOnly, update, ...formProps } = useConfigLink<Configuration>(link);
   const { formState, handleSubmit, register, reset } = useForm<Configuration>({ mode: "onChange" });
-  const {errors} = formState;
+  const { errors } = formState;
 
   useEffect(() => {
     if (initialConfiguration) {
@@ -57,7 +58,7 @@ const GotenbergConfiguration: FC<Props> = ({ link }) => {
         errorMessage={t("scm-gotenberg-plugin.config.invalid")}
         validationError={!!errors.url}
         {...register("url", {
-          validate: url => validation.isUrlValid(url)
+          validate: (url) => validation.isUrlValid(url),
         })}
       />
       <Checkbox

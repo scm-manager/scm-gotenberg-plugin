@@ -14,16 +14,14 @@
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
-import React, {FC} from "react";
-import {File, Link} from "@scm-manager/ui-types";
+import React, { FC } from "react";
+import { File, Link } from "@scm-manager/ui-types";
 import PdfViewer from "./PdfViewer";
 
 type Props = {
   file: File;
 };
 
-const ConvertedPdfViewer:FC<Props> = ({file}) => (
-  <PdfViewer src={(file._links.pdf as Link).href} download={file} />
-);
+const ConvertedPdfViewer: FC<Props> = ({ file }) => <PdfViewer src={(file._links.pdf as Link).href} download={file} />;
 
 export default ConvertedPdfViewer;
